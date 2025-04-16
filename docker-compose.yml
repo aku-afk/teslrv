@@ -1,0 +1,57 @@
+version: '3'
+services:
+  lara-php:
+    build: ./php
+    image: php:latest
+    container_name: lara-php
+    hostname: "php"
+    volumes:
+      - ./src:/var/www/html
+      - ./php/www.conf:/usr/local/etc/php-fpm.d/www.conf
+    working_dir: /var/www/html
+    depends_on: 
+      - lara-mysql
+
+  lara-mysql:
+    image: mariadb:latest
+    container_name: lara-mysql
+    restart: unless-stopped
+    tty: true
+    volumes:
+      - ./database/data:/var/lib/mysql
+      - ./database/conf.d:/etc/mysql/conf.d:ro
+    environment:
+      MYSQL_USER: mamat
+      MYSQL_PASSWORD: B4l4n9-54nd4l.
+      MYSQL_ROOT_PASSWORD: B4l4n9-54nd4l.
+      TZ: Asia/Jakarta
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql  
+    read_only: false
+
+  lara-nginx:
+    build: ./nginx
+    image: nginx:latest
+    container_name: lara-nginx
+    hostname: "laranginx"
+    ports:
+      - "8080:80"
+    volumes:
+      - ./src:/var/www/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - lara-php
+
+  lara-pma:
+    depends_on:
+      - lara-mysql
+    container_name: lara-pma
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports:
+      - 8181:80
+    environment:
+      PMA_HOST: lara-mysql
+      MYSQL_ROOT_PASSWORD: B4l4n9-54nd4l.
+    volumes:
+      - ./pma:/var/www/html/phpmyadmin
